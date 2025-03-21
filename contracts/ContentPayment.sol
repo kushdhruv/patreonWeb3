@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -8,7 +8,7 @@ contract ContentPayment {
     address public owner;
 
     event ContentPurchased(address indexed buyer, string contentHash, uint256 amount);
-    event TokensWithdrawn(address indexed owner, uint256 amount);
+    event TokensWithdrawn(address indexed owner, uint256 amount, uint256 remainingBalance);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the owner");
@@ -28,7 +28,9 @@ contract ContentPayment {
     }
 
     function withdrawTokens(uint256 amount) public onlyOwner {
+        uint256 contractBalance = creatorToken.balanceOf(address(this));
+        require(contractBalance >= amount, "Insufficient contract balance");
         require(creatorToken.transfer(owner, amount), "Withdraw failed");
-        emit TokensWithdrawn(owner, amount);
+        emit TokensWithdrawn(owner, amount, contractBalance - amount);
     }
 }

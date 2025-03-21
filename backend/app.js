@@ -1,31 +1,41 @@
-import express, { json } from 'express';
-import { connect } from 'mongoose';
-import authRoutes from './routes/authRoutes';
-import contentRoutes from './routes/contentRoutes';
-import chatRoutes from './routes/chatRoutes';
-import { connectToWeb3 } from './utils/web3';
-import { connectToIPFS } from './utils/ipfs';
-
+// backend/app.js
+const express = require("express");
+const { ethers } = require("ethers");
+const cors = require("cors"); // Import the cors package
+require("dotenv").config({ path: "../.env" });
 const app = express();
-require('dotenv').config();
+//require("dotenv").config();
 
-// Middleware
-app.use(json());
+// Middleware for JSON parsing
+app.use(express.json());
+app.use(cors()); // Use the cors middleware
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/content', contentRoutes);
-app.use('/chat', chatRoutes);
+// Initialize ethers.js provider and contract
+const provider = new ethers.JsonRpcProvider(process.env.POLYGON_AMOY_RPC_URL);
 
-// Connect to MongoDB
-connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const contentPaymentABI = require("./contracts/ContentPaymentABI.json");
+const contentPaymentAddress = process.env.CONTENT_PAYMENT_ADDRESS;
+const contentPaymentContract = new ethers.Contract(contentPaymentAddress, contentPaymentABI, wallet);
 
-// Connect to Web3 and IPFS
-connectToWeb3();
-connectToIPFS();
+// Purchase content endpoint
+app.post("/purchase", async (req, res) => {
+  const { contentHash, amount } = req.body;
 
-// Start server
+  try {
+    // Convert amount to wei (smallest unit of MATIC)
+    const amountInWei = ethers.parseEther(amount.toString());
+    console.log(amountInWei);
+    const tx = await contentPaymentContract.purchaseContent(amountInWei, contentHash);
+    
+    await tx.wait();
+    console.log(tx.hash);
+    res.json({ success: true, transactionHash: tx.hash });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Start the server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

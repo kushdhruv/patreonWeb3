@@ -1,35 +1,33 @@
-const hre = require("hardhat");
-const fs = require("fs");
+const { ethers } = require("hardhat");
 
 async function main() {
-    const [deployer] = await hre.ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
+  console.log("Deploying contracts with the account:", deployer.address);
 
-    console.log("Deploying contracts with the account:", deployer.address);
+  // Use ethers.parseUnits instead of parseEther
+  const initialSupply = ethers.parseUnits("10000", 18); // 10,000 tokens with 18 decimals
+  console.log("Initial supply:", initialSupply.toString());
 
-    // Deploy CreatorToken with an initial supply of 1 million tokens
-    const CreatorToken = await hre.ethers.getContractFactory("CreatorToken");
-    const creatorToken = await CreatorToken.deploy(ethers.utils.parseEther("1000000")); // 1M tokens
-    await creatorToken.deployed();
-    console.log("CreatorToken deployed to:", creatorToken.address);
+  try {
+    const CreatorToken = await ethers.getContractFactory("CreatorToken");
+    console.log("Deploying CreatorToken...");
 
-    // Deploy ContentPayment with the CreatorToken address
-    const ContentPayment = await hre.ethers.getContractFactory("ContentPayment");
-    const contentPayment = await ContentPayment.deploy(creatorToken.address);
-    await contentPayment.deployed();
-    console.log("ContentPayment deployed to:", contentPayment.address);
+    const creatorToken = await CreatorToken.deploy(initialSupply);
 
-    // Save deployed addresses to a file
-    fs.writeFileSync(
-        "deployedAddresses.json",
-        JSON.stringify({
-            CreatorToken: creatorToken.address,
-            ContentPayment: contentPayment.address,
-        }, null, 2)
-    );
-    console.log("Deployed addresses saved to deployedAddresses.json");
+    console.log("Waiting for deployment to complete...");
+    await creatorToken.waitForDeployment(); // Use waitForDeployment instead of deployed()
+
+    console.log("CreatorToken deployed to:", creatorToken.target); // Use target to get the deployed address
+
+    // Example: Interact with the contract
+    const totalSupply = await creatorToken.totalSupply();
+    console.log("Total supply:", ethers.formatUnits(totalSupply, 18)); // Format with 18 decimals
+  } catch (error) {
+    console.error("Error during deployment:", error);
+  }
 }
 
 main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
+  console.error("Error:", error);
+  process.exitCode = 1;
 });

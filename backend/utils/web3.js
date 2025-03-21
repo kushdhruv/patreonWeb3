@@ -1,15 +1,10 @@
-import { ethers } from "ethers";
-import contentPaymentABI from "../contracts/ContentPaymentABI.json";
+// backend/utils/web3.js
+const { ethers } = require("ethers");
 
-// Initialize provider and signer
-const provider = new ethers.providers.JsonRpcProvider(process.env.POLYGON_RPC_URL);
+const provider = new ethers.providers.JsonRpcProvider(process.env.POLYGON_AMOY_RPC_URL);
 const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const contentPaymentABI = require("../contracts/ContentPaymentABI.json");
+const contentPaymentAddress = process.env.CONTENT_PAYMENT_ADDRESS;
+const contentPaymentContract = new ethers.Contract(contentPaymentAddress, contentPaymentABI, wallet);
 
-// Initialize contract
-const contentPaymentContract = new ethers.Contract(
-  process.env.CONTENT_PAYMENT_ADDRESS,
-  contentPaymentABI,
-  wallet
-);
-
-export default { provider, wallet, contentPaymentContract };
+module.exports = { provider, wallet, contentPaymentContract };

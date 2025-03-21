@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web3 Patreon</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Web3 Patreon</h1>
+
+    <!-- Wallet Connection -->
+    <div class="section">
+      <h2>Connect Wallet</h2>
+      <button id="connectWallet">Connect Wallet</button>
+      <p id="walletAddress"></p>
+    </div>
+
+    <!-- Purchase Content -->
+    <div class="section">
+      <h2>Purchase Content</h2>
+      <input type="text" id="contentHashInput" placeholder="Enter Content Hash">
+      <input type="number" id="amountInput" placeholder="Enter Amount (MATIC)">
+      <button id="purchaseContent">Purchase Content</button>
+      <p id="purchaseStatus"></p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
